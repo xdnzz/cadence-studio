@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import CadenceStudioPage from '../page';
 import { useAudioStore } from '@/stores/useAudioStore';
+import { useIntelligenceStore } from '@/stores/useIntelligenceStore';
 
 class MockResizeObserver {
   observe = vi.fn();
@@ -12,6 +13,7 @@ class MockResizeObserver {
 describe('CadenceStudioPage integration', () => {
   beforeEach(() => {
     useAudioStore.getState().reset();
+    useIntelligenceStore.getState().reset();
     vi.restoreAllMocks();
 
     window.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;

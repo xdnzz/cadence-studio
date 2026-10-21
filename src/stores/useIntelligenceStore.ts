@@ -1,5 +1,17 @@
 import { create } from 'zustand';
-import { MeetingIntelligence, ActionItem, ActionItemStatus } from '@/types/intelligence';
+import {
+  MeetingIntelligence,
+  ActionItem,
+  ActionItemPriority,
+  ActionItemStatus,
+} from '@/types/intelligence';
+import { clearMeeting, saveMeeting } from '@/lib/localMeetingStore';
+
+export interface ActionItemEdits {
+  title?: string;
+  assignee?: string;
+  priority?: ActionItemPriority;
+}
 
 interface IntelligenceState {
   intelligence: MeetingIntelligence | null;
@@ -14,6 +26,7 @@ interface IntelligenceActions {
   appendStreamedSummary: (chunk: string) => void;
   setIsGenerating: (isGenerating: boolean) => void;
   toggleActionItemStatus: (actionItemId: string) => void;
+  updateActionItem: (actionItemId: string, edits: ActionItemEdits) => void;
   addActionItem: (item: ActionItem) => void;
   removeActionItem: (actionItemId: string) => void;
   setError: (error: string | null) => void;
@@ -64,6 +77,32 @@ export const useIntelligenceStore = create<IntelligenceStore>((set) => ({
       };
     }),
 
+  updateActionItem: (actionItemId, edits) =>
+    set((state) => {
+      if (!state.intelligence) return state;
+
+      return {
+        intelligence: {
+          ...state.intelligence,
+          actionItems: state.intelligence.actionItems.map((item) => {
+            if (item.id !== actionItemId) return item;
+
+            const next = { ...item };
+            if (edits.title !== undefined) {
+              const title = edits.title.trim();
+              if (title) next.title = title;
+            }
+            if (edits.priority !== undefined) next.priority = edits.priority;
+            if (edits.assignee !== undefined) {
+              const assignee = edits.assignee.trim();
+              next.assignee = assignee || undefined;
+            }
+            return next;
+          }),
+        },
+      };
+    }),
+
   addActionItem: (item) =>
     set((state) => {
       if (!state.intelligence) {
@@ -101,3 +140,9 @@ export const useIntelligenceStore = create<IntelligenceStore>((set) => ({
 
   reset: () => set(initialState),
 }));
+
+useIntelligenceStore.subscribe((state, previous) => {
+  if (state.intelligence === previous.intelligence) return;
+  if (state.intelligence) saveMeeting(state.intelligence);
+  else clearMeeting();
+});

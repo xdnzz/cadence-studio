@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useIntelligenceStore } from '../useIntelligenceStore';
 import { MeetingIntelligence, ActionItem } from '@/types/intelligence';
+import { loadMeeting } from '@/lib/localMeetingStore';
 
 const mockIntelligence: MeetingIntelligence = {
   overview: 'Discussion on architecture and real-time frontend reliability.',
@@ -65,6 +66,29 @@ describe('useIntelligenceStore', () => {
 
     useIntelligenceStore.getState().toggleActionItemStatus('a-1');
     expect(useIntelligenceStore.getState().intelligence?.actionItems[0].status).toBe('pending');
+  });
+
+  it('should edit an action item priority, description, and area', () => {
+    useIntelligenceStore.getState().setIntelligence(mockIntelligence);
+
+    useIntelligenceStore.getState().updateActionItem('a-1', {
+      title: '  Verify the production build  ',
+      priority: 'urgent',
+      assignee: '  Danilo Diniz  ',
+    });
+
+    const item = useIntelligenceStore.getState().intelligence?.actionItems[0];
+    expect(item?.title).toBe('Verify the production build');
+    expect(item?.priority).toBe('urgent');
+    expect(item?.assignee).toBe('Danilo Diniz');
+
+    useIntelligenceStore.getState().updateActionItem('a-1', { title: '   ', assignee: '   ' });
+    const cleared = useIntelligenceStore.getState().intelligence?.actionItems[0];
+    expect(cleared?.title).toBe('Verify the production build');
+    expect(cleared?.assignee).toBeUndefined();
+
+    expect(loadMeeting()?.actionItems[0].title).toBe('Verify the production build');
+    expect(loadMeeting()?.actionItems[0].assignee).toBeUndefined();
   });
 
   it('should add and remove action items dynamically', () => {

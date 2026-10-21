@@ -1,13 +1,13 @@
 'use client';
 
 import React from 'react';
-import { Sparkles, CheckCircle2, Circle, Clock } from 'lucide-react';
+import { Sparkles, Clock } from 'lucide-react';
 import { useIntelligenceStore } from '@/stores/useIntelligenceStore';
 import { useAudioEngine } from '@/hooks/useAudioEngine';
 import { formatTime } from '@/lib/audioMath';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, Panel, PanelHeader, PanelTitle, SectionLabel } from '@/components/ui/panel';
+import { ActionItemCard } from '@/components/intelligence/ActionItemCard';
 
 export const MeetingIntelligencePanel: React.FC = () => {
   const intelligence = useIntelligenceStore((state) => state.intelligence);
@@ -97,56 +97,18 @@ export const MeetingIntelligencePanel: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              {intelligence.actionItems.map((action) => {
-                const isCompleted = action.status === 'completed';
-
-                return (
-                  <Card key={action.id} className="flex items-start gap-3 p-3">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => toggleActionItemStatus(action.id)}
-                      className="mt-0.5 h-auto p-0 hover:bg-transparent"
-                      title={isCompleted ? 'Mark as pending' : 'Mark as done'}
-                    >
-                      {isCompleted ? (
-                        <CheckCircle2 className="h-4 w-4 text-success" />
-                      ) : (
-                        <Circle className="h-4 w-4" />
-                      )}
-                    </Button>
-
-                    <div className="flex-1">
-                      <span
-                        className={`block text-xs ${
-                          isCompleted ? 'text-faint line-through' : 'text-soft'
-                        }`}
-                      >
-                        {action.title}
-                      </span>
-
-                      <div className="mt-2 flex items-center gap-2">
-                        <Badge tone={action.priority}>{action.priority}</Badge>
-
-                        {action.assignee && (
-                          <span className="text-[11px] text-muted">{action.assignee}</span>
-                        )}
-
-                        {typeof action.originTimestamp === 'number' && (
-                          <Button
-                            variant="ghost"
-                            onClick={() => handleTimestampJump(action.originTimestamp)}
-                            className="ml-auto h-auto p-0 font-mono text-[10px] text-faint hover:bg-transparent hover:text-brand-soft"
-                          >
-                            <Clock className="h-2.5 w-2.5" />
-                            {formatTime(action.originTimestamp)}
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </Card>
-                );
-              })}
+              {intelligence.actionItems.map((action) => (
+                <ActionItemCard
+                  key={action.id}
+                  action={action}
+                  onToggle={() => toggleActionItemStatus(action.id)}
+                  onJump={
+                    typeof action.originTimestamp === 'number'
+                      ? () => handleTimestampJump(action.originTimestamp)
+                      : undefined
+                  }
+                />
+              ))}
             </div>
           </section>
         )}

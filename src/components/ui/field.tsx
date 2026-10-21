@@ -1,6 +1,9 @@
 import { cn } from '@/lib/utils';
 
-export function Field({ className, ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
+export function Field({
+  className,
+  ...props
+}: React.InputHTMLAttributes<HTMLInputElement> & { ref?: React.Ref<HTMLInputElement> }) {
   return (
     <input
       className={cn(

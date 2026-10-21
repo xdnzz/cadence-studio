@@ -22,6 +22,7 @@ const mockIntelligence: MeetingIntelligence = {
       priority: 'urgent',
       status: 'pending',
       originTimestamp: 50,
+      assignee: 'Danilo Diniz',
     },
   ],
   sentiment: {
@@ -59,6 +60,49 @@ describe('MeetingIntelligencePanel', () => {
     fireEvent.click(toggleBtn);
 
     expect(useIntelligenceStore.getState().intelligence?.actionItems[0].status).toBe('completed');
+  });
+
+  it('should edit the task description, priority, and area from the modal', () => {
+    useIntelligenceStore.getState().setIntelligence(mockIntelligence);
+
+    render(<MeetingIntelligencePanel />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit task' }));
+    expect(screen.getByRole('dialog', { name: 'Edit task' })).toBeInTheDocument();
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Task description' }), {
+      target: { value: 'Ship the preview build' },
+    });
+    fireEvent.click(screen.getByRole('radio', { name: 'high' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Task owner' }), {
+      target: { value: 'DevOps' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    const item = useIntelligenceStore.getState().intelligence?.actionItems[0];
+    expect(item?.title).toBe('Ship the preview build');
+    expect(item?.priority).toBe('high');
+    expect(item?.assignee).toBe('DevOps');
+    expect(screen.getByText('Ship the preview build')).toBeInTheDocument();
+    expect(screen.getByText('DevOps')).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('should discard modal edits when cancelling', () => {
+    useIntelligenceStore.getState().setIntelligence(mockIntelligence);
+
+    render(<MeetingIntelligencePanel />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit task' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Task description' }), {
+      target: { value: 'Ship the preview build' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(useIntelligenceStore.getState().intelligence?.actionItems[0].title).toBe(
+      'Deploy to Vercel preview',
+    );
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   it('should render streamed summary and pulsing cursor during generation', () => {

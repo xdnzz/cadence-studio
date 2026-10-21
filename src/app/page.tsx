@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { AudioMetadata } from '@/types/audio';
 import { TranscriptSegment } from '@/types/transcript';
 import { MeetingIntelligence } from '@/types/intelligence';
+import { loadMeeting } from '@/lib/localMeetingStore';
 
 function GitHubMark({ className }: { className?: string }) {
   return (
@@ -154,7 +155,7 @@ export default function CadenceStudioPage() {
     setActiveTrack(sampleTrack);
     setDuration(120);
     setSegments(sampleSegments);
-    setIntelligence(sampleIntelligence);
+    setIntelligence(loadMeeting() ?? sampleIntelligence);
   }, [setActiveTrack, setDuration, setSegments, setIntelligence]);
 
   useLayoutEffect(() => {
