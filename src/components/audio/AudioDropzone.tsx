@@ -3,9 +3,9 @@
 import React, { useState, useRef } from 'react';
 import { UploadCloud, FileAudio, Loader2, X } from 'lucide-react';
 import { useAudioStore } from '@/stores/useAudioStore';
+import { useTranscriptStore } from '@/stores/useTranscriptStore';
+import { useIntelligenceStore } from '@/stores/useIntelligenceStore';
 import { decodeAudioFile } from '@/lib/audioDecoder';
-import { Button } from '@/components/ui/button';
-import { Panel, PanelTitle } from '@/components/ui/panel';
 
 interface AudioDropzoneProps {
   isOpen: boolean;
@@ -20,12 +20,15 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const setActiveTrack = useAudioStore((state) => state.setActiveTrack);
   const setDuration = useAudioStore((state) => state.setDuration);
+  const setSegments = useTranscriptStore((state) => state.setSegments);
+  const setIntelligence = useIntelligenceStore((state) => state.setIntelligence);
 
   if (!isOpen) return null;
 
@@ -38,6 +41,7 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
     try {
       setIsProcessing(true);
       setErrorMessage(null);
+      setStatusMessage('Decoding audio peaks in the browser...');
 
       const { duration, waveform, audioUrl } = await decodeAudioFile(file, 80);
 
@@ -53,11 +57,38 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
 
       setDuration(duration);
       onAudioDecoded?.(waveform.peaks as number[]);
-      onClose();
+
+      setStatusMessage('Analyzing the meeting with Google Gemini...');
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/transcribe', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+
+        if (result.segments && result.segments.length > 0) {
+          setSegments(result.segments);
+        }
+
+        if (result.intelligence) {
+          setIntelligence(result.intelligence);
+        }
+
+        onClose();
+      } else {
+        const errData = await response.json();
+        setErrorMessage(errData.error || 'Could not process the audio with Gemini.');
+      }
     } catch {
-      setErrorMessage('Failed to decode the audio file in the browser.');
+      setErrorMessage('Failed to process the audio file.');
     } finally {
       setIsProcessing(false);
+      setStatusMessage(null);
     }
   };
 
@@ -86,27 +117,33 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-canvas/80 p-4 backdrop-blur-sm">
-      <Panel className="h-auto w-full max-w-lg space-y-4 p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-lg p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl space-y-4">
         <div className="flex items-center justify-between">
-          <PanelTitle icon={<FileAudio className="h-5 w-5 text-brand-soft" />}>
-            Upload Meeting Recording
-          </PanelTitle>
+          <div className="flex items-center gap-2">
+            <FileAudio className="w-5 h-5 text-orange-400" />
+            <h3 className="text-sm font-semibold text-slate-100">Upload Meeting Recording</h3>
+          </div>
 
-          <Button variant="ghost" size="icon" onClick={onClose} className="h-auto p-1">
-            <X className="h-4 w-4" />
-          </Button>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isProcessing}
+            className="p-1 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors disabled:opacity-50"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
         <div
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
-          className={`flex cursor-pointer flex-col items-center justify-center rounded-card border-2 border-dashed p-8 transition-all ${
+          onClick={() => !isProcessing && fileInputRef.current?.click()}
+          className={`flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
             isDragging
-              ? 'border-brand bg-brand/10'
-              : 'border-line bg-canvas/50 hover:border-line-strong'
+              ? 'border-orange-500 bg-orange-500/10'
+              : 'border-slate-800 hover:border-slate-700 bg-slate-950/50'
           }`}
         >
           <input
@@ -119,32 +156,35 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
 
           {isProcessing ? (
             <div className="flex flex-col items-center gap-2">
-              <Loader2 className="h-8 w-8 animate-spin text-brand-soft" />
-              <p className="text-xs font-medium text-soft">
-                Decoding amplitude peaks with the Web Audio API...
+              <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
+              <p className="text-xs font-medium text-slate-200">
+                {statusMessage}
+              </p>
+              <p className="text-[11px] text-slate-500">
+                Multimodal processing with Gemini...
               </p>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2 text-center">
-              <div className="rounded-full bg-raised p-3 text-brand-soft">
-                <UploadCloud className="h-6 w-6" />
+              <div className="p-3 rounded-full bg-slate-800 text-orange-400">
+                <UploadCloud className="w-6 h-6" />
               </div>
-              <p className="text-xs font-semibold text-soft">
+              <p className="text-xs font-semibold text-slate-200">
                 Drag an audio file here or click to select
               </p>
-              <p className="text-[11px] text-faint">
-                Supports MP3, WAV, M4A, or AAC (processed entirely in the browser)
+              <p className="text-[11px] text-slate-500">
+                Supports MP3, WAV, M4A, or AAC
               </p>
             </div>
           )}
         </div>
 
         {errorMessage && (
-          <div className="rounded-control border border-danger-line/60 bg-danger-deep/40 p-3 text-xs text-danger">
+          <div className="p-3 rounded-lg bg-red-950/40 border border-red-800/60 text-xs text-red-400">
             {errorMessage}
           </div>
         )}
-      </Panel>
+      </div>
     </div>
   );
 };
