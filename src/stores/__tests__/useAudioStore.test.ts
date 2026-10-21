@@ -17,7 +17,7 @@ describe('useAudioStore', () => {
     useAudioStore.getState().reset();
   });
 
-  it('deve inicializar com o estado padrão', () => {
+  it('initializes with the default state', () => {
     const state = useAudioStore.getState();
 
     expect(state.status).toBe('idle');
@@ -30,7 +30,7 @@ describe('useAudioStore', () => {
     expect(state.error).toBeNull();
   });
 
-  it('deve definir a faixa ativa e atualizar o status para loading', () => {
+  it('sets the active track and updates the status to loading', () => {
     useAudioStore.getState().setActiveTrack(mockTrack);
     const state = useAudioStore.getState();
 
@@ -40,7 +40,7 @@ describe('useAudioStore', () => {
     expect(state.currentTime).toBe(0);
   });
 
-  it('deve atualizar o status de reprodução', () => {
+  it('updates the playback status', () => {
     useAudioStore.getState().setStatus('playing');
     expect(useAudioStore.getState().status).toBe('playing');
 
@@ -48,12 +48,12 @@ describe('useAudioStore', () => {
     expect(useAudioStore.getState().status).toBe('paused');
   });
 
-  it('deve atualizar o currentTime', () => {
+  it('updates currentTime', () => {
     useAudioStore.getState().setCurrentTime(45.5);
     expect(useAudioStore.getState().currentTime).toBe(45.5);
   });
 
-  it('deve limitar o volume entre 0 e 1', () => {
+  it('clamps the volume between 0 and 1', () => {
     useAudioStore.getState().setVolume(1.5);
     expect(useAudioStore.getState().volume).toBe(1.0);
 
@@ -66,7 +66,7 @@ describe('useAudioStore', () => {
     expect(useAudioStore.getState().isMuted).toBe(false);
   });
 
-  it('deve alternar o estado de mudo', () => {
+  it('toggles the muted state', () => {
     expect(useAudioStore.getState().isMuted).toBe(false);
 
     useAudioStore.getState().toggleMute();
@@ -76,20 +76,20 @@ describe('useAudioStore', () => {
     expect(useAudioStore.getState().isMuted).toBe(false);
   });
 
-  it('deve definir a velocidade de reprodução', () => {
+  it('sets the playback rate', () => {
     useAudioStore.getState().setPlaybackRate(1.5);
     expect(useAudioStore.getState().playbackRate).toBe(1.5);
   });
 
-  it('deve registrar erro e alterar status para error', () => {
-    useAudioStore.getState().setError('Falha ao decodificar áudio');
+  it('records an error and sets the status to error', () => {
+    useAudioStore.getState().setError('Failed to decode audio');
     const state = useAudioStore.getState();
 
-    expect(state.error).toBe('Falha ao decodificar áudio');
+    expect(state.error).toBe('Failed to decode audio');
     expect(state.status).toBe('error');
   });
 
-  it('deve resetar o estado para os valores iniciais', () => {
+  it('resets the state to the initial values', () => {
     useAudioStore.getState().setActiveTrack(mockTrack);
     useAudioStore.getState().setCurrentTime(90);
     useAudioStore.getState().setStatus('playing');
