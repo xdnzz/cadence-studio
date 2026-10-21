@@ -36,7 +36,7 @@ export function useAudioEngine() {
     };
 
     const handleError = () => {
-      setError('Falha ao reproduzir arquivo de áudio');
+      setError('Failed to play the audio file');
     };
 
     const handleWaiting = () => {
@@ -104,7 +104,7 @@ export function useAudioEngine() {
       await audio.play();
     } catch {
       setStatus('paused');
-      setError('Não foi possível iniciar a reprodução');
+      setError('Could not start playback');
     }
   }, [setStatus, setError]);
 

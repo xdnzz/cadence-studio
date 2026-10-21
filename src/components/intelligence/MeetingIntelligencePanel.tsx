@@ -59,7 +59,7 @@ export const MeetingIntelligencePanel: React.FC = () => {
                 )}
               </p>
             ) : (
-              <p className="text-slate-500">Nenhum resumo gerado até o momento.</p>
+              <p className="text-slate-500">No summary generated yet.</p>
             )}
           </div>
         </section>
@@ -118,7 +118,7 @@ export const MeetingIntelligencePanel: React.FC = () => {
                       type="button"
                       onClick={() => toggleActionItemStatus(action.id)}
                       className="mt-0.5 text-slate-400 hover:text-orange-400 transition-colors"
-                      title={isCompleted ? 'Marcar como pendente' : 'Marcar como concluída'}
+                      title={isCompleted ? 'Mark as pending' : 'Mark as done'}
                     >
                       {isCompleted ? (
                         <CheckCircle2 className="w-4 h-4 text-emerald-400" />

@@ -49,7 +49,7 @@ export const TranscriptViewer: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar por termo ou participante..."
+            placeholder="Search by term or participant..."
             className="w-full pl-9 pr-8 py-1.5 text-sm rounded-lg bg-slate-950 border border-slate-800 text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
           />
           {searchQuery && (
@@ -85,7 +85,7 @@ export const TranscriptViewer: React.FC = () => {
       >
         {filteredSegments.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 text-slate-500 text-sm">
-            Nenhum trecho encontrado para a busca.
+            No transcript segments match this search.
           </div>
         ) : (
           filteredSegments.map((segment) => {

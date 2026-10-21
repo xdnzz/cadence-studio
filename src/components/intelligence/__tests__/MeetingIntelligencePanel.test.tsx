@@ -55,7 +55,7 @@ describe('MeetingIntelligencePanel', () => {
 
     render(<MeetingIntelligencePanel />);
 
-    const toggleBtn = screen.getByTitle('Marcar como concluída');
+    const toggleBtn = screen.getByTitle('Mark as done');
     fireEvent.click(toggleBtn);
 
     expect(useIntelligenceStore.getState().intelligence?.actionItems[0].status).toBe('completed');

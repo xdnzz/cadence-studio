@@ -35,7 +35,7 @@ describe('AudioPlayerControls', () => {
   it('toggles mute when the volume icon is clicked', () => {
     render(<AudioPlayerControls />);
 
-    const muteButton = screen.getByTitle('Mudo (M)');
+    const muteButton = screen.getByTitle('Mute (M)');
     fireEvent.click(muteButton);
 
     expect(useAudioStore.getState().isMuted).toBe(true);

@@ -47,10 +47,10 @@ describe('TranscriptViewer', () => {
 
     render(<TranscriptViewer />);
 
-    const searchInput = screen.getByPlaceholderText('Buscar por termo ou participante...');
+    const searchInput = screen.getByPlaceholderText('Search by term or participant...');
     fireEvent.change(searchInput, { target: { value: 'nonexistent' } });
 
-    expect(screen.getByText('Nenhum trecho encontrado para a busca.')).toBeInTheDocument();
+    expect(screen.getByText('No transcript segments match this search.')).toBeInTheDocument();
   });
 
   it('should toggle auto scroll when auto scroll button is clicked', () => {
