@@ -6,6 +6,9 @@ import { useTranscriptStore } from '@/stores/useTranscriptStore';
 import { useTranscriptSync } from '@/hooks/useTranscriptSync';
 import { useAudioEngine } from '@/hooks/useAudioEngine';
 import { formatTime } from '@/lib/audioMath';
+import { Button } from '@/components/ui/button';
+import { Field } from '@/components/ui/field';
+import { Panel, PanelHeader } from '@/components/ui/panel';
 import { WordTimestamp } from '@/types/transcript';
 
 export const TranscriptViewer: React.FC = () => {
@@ -41,50 +44,42 @@ export const TranscriptViewer: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-2xl">
-      <div className="flex items-center justify-between gap-3 p-4 border-b border-slate-800 bg-slate-900/80 backdrop-blur">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-          <input
+    <Panel>
+      <PanelHeader>
+        <div className="relative max-w-md flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
+          <Field
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(event) => setSearchQuery(event.target.value)}
             placeholder="Search by term or participant..."
-            className="w-full pl-9 pr-8 py-1.5 text-sm rounded-lg bg-slate-950 border border-slate-800 text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+            className="pl-9 pr-8"
           />
           {searchQuery && (
             <button
               type="button"
               onClick={() => setSearchQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-faint hover:text-soft"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="h-3.5 w-3.5" />
             </button>
           )}
         </div>
 
-        <button
-          type="button"
+        <Button
+          variant="toggle"
+          data-active={isAutoScrollEnabled}
           onClick={() => setAutoScrollEnabled(!isAutoScrollEnabled)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-            isAutoScrollEnabled
-              ? 'bg-orange-500/10 text-orange-400 border border-orange-500/30'
-              : 'bg-slate-800 text-slate-400 hover:text-slate-200'
-          }`}
           title="Auto-scroll"
         >
-          <ArrowDown className={`w-3.5 h-3.5 ${isAutoScrollEnabled ? 'animate-bounce' : ''}`} />
+          <ArrowDown className={`h-3.5 w-3.5 ${isAutoScrollEnabled ? 'animate-bounce' : ''}`} />
           <span>Auto-scroll</span>
-        </button>
-      </div>
+        </Button>
+      </PanelHeader>
 
-      <div
-        ref={containerRef}
-        onWheel={handleWheel}
-        className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-slate-800"
-      >
+      <div ref={containerRef} onWheel={handleWheel} className="flex-1 space-y-6 overflow-y-auto p-6">
         {filteredSegments.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-48 text-slate-500 text-sm">
+          <div className="flex h-48 flex-col items-center justify-center text-sm text-faint">
             No transcript segments match this search.
           </div>
         ) : (
@@ -94,26 +89,22 @@ export const TranscriptViewer: React.FC = () => {
             return (
               <div
                 key={segment.id}
-                className={`p-4 rounded-xl transition-colors ${
-                  isSegmentActive ? 'bg-slate-800/40 border border-slate-700/60' : 'bg-transparent'
+                className={`rounded-card p-4 transition-colors ${
+                  isSegmentActive ? 'border border-line-strong/60 bg-raised/40' : 'bg-transparent'
                 }`}
               >
-                <div className="flex items-center justify-between mb-2">
+                <div className="mb-2 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-200 uppercase">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-line-strong text-[10px] font-bold uppercase text-soft">
                       {segment.speakerName.slice(0, 2)}
                     </div>
-                    <span className="text-xs font-semibold text-slate-300">
-                      {segment.speakerName}
-                    </span>
+                    <span className="text-xs font-semibold text-soft">{segment.speakerName}</span>
                   </div>
 
-                  <span className="text-[11px] font-mono text-slate-500">
-                    {formatTime(segment.start)}
-                  </span>
+                  <span className="font-mono text-[11px] text-faint">{formatTime(segment.start)}</span>
                 </div>
 
-                <p className="text-sm leading-relaxed text-slate-300 flex flex-wrap gap-x-1 gap-y-1">
+                <p className="flex flex-wrap gap-x-1 gap-y-1 text-sm leading-relaxed text-soft">
                   {segment.words.map((word) => {
                     const isWordActive = word.id === activeWordId;
 
@@ -122,10 +113,10 @@ export const TranscriptViewer: React.FC = () => {
                         key={word.id}
                         ref={isWordActive ? activeWordRef : null}
                         onClick={() => handleWordClick(word)}
-                        className={`cursor-pointer px-1 py-0.5 rounded transition-all ${
+                        className={`cursor-pointer rounded px-1 py-0.5 transition-all ${
                           isWordActive
-                            ? 'bg-orange-500 text-white font-medium shadow-sm'
-                            : 'hover:bg-slate-800 hover:text-slate-100 text-slate-300'
+                            ? 'bg-brand font-medium text-on-brand shadow-sm'
+                            : 'text-soft hover:bg-raised hover:text-ink'
                         }`}
                       >
                         {word.word}
@@ -138,6 +129,6 @@ export const TranscriptViewer: React.FC = () => {
           })
         )}
       </div>
-    </div>
+    </Panel>
   );
 };

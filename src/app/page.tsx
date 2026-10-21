@@ -12,6 +12,8 @@ import { TranscriptViewer } from '@/components/transcript/TranscriptViewer';
 import { MeetingIntelligencePanel } from '@/components/intelligence/MeetingIntelligencePanel';
 import { WorkflowCanvas } from '@/components/workflow/WorkflowCanvas';
 import { AudioDropzone } from '@/components/audio/AudioDropzone';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { AudioMetadata } from '@/types/audio';
 import { TranscriptSegment } from '@/types/transcript';
 import { MeetingIntelligence } from '@/types/intelligence';
@@ -172,20 +174,18 @@ export default function CadenceStudioPage() {
   }, [activeTab]);
 
   return (
-    <div className="flex flex-col h-screen bg-slate-950 text-slate-100 overflow-hidden font-sans">
-      <header className="flex items-center justify-between px-4 sm:px-6 py-2.5 sm:py-3 border-b border-slate-800 bg-slate-950/90 backdrop-blur z-20">
+    <div className="flex h-screen flex-col overflow-hidden bg-canvas font-sans text-ink">
+      <header className="z-20 flex items-center justify-between border-b border-line bg-canvas/90 px-4 py-2.5 backdrop-blur sm:px-6 sm:py-3">
         <div className="flex items-center gap-2.5 sm:gap-3">
-          <div className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-orange-500 text-white shadow-md shadow-orange-500/20">
-            <Radio className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-pulse" />
+          <div className="flex h-7 w-7 items-center justify-center rounded-control bg-brand text-on-brand shadow-md shadow-brand/20 sm:h-8 sm:w-8">
+            <Radio className="h-3.5 w-3.5 animate-pulse sm:h-4 sm:w-4" />
           </div>
           <div>
-            <h1 className="text-xs sm:text-sm font-bold tracking-tight text-white flex items-center gap-1.5 sm:gap-2">
+            <h1 className="flex items-center gap-1.5 text-xs font-bold tracking-tight text-ink-strong sm:gap-2 sm:text-sm">
               Cadence Studio
-              <span className="text-[9px] sm:text-[10px] font-mono px-1 sm:px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">
-                v0.1.0
-              </span>
+              <Badge>v0.1.0</Badge>
             </h1>
-            <p className="hidden sm:block text-[11px] text-slate-400 truncate max-w-[200px] md:max-w-none">
+            <p className="hidden max-w-[200px] truncate text-[11px] text-muted sm:block md:max-w-none">
               {activeTrack?.title || 'Q3 Product & Architecture Alignment'}
             </p>
           </div>
@@ -193,11 +193,11 @@ export default function CadenceStudioPage() {
 
         <nav
           ref={tabListRef}
-          className="relative flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800"
+          className="relative flex items-center gap-1 rounded-card border border-line bg-surface p-1"
         >
           <span
             aria-hidden
-            className={`absolute top-1 bottom-1 rounded-lg bg-slate-800 shadow-sm ${
+            className={`absolute bottom-1 top-1 rounded-control bg-raised shadow-sm ${
               tabIndicator.ready
                 ? 'transition-[left,width] duration-300 ease-out motion-reduce:transition-none'
                 : ''
@@ -208,11 +208,11 @@ export default function CadenceStudioPage() {
             type="button"
             data-active={activeTab === 'meeting'}
             onClick={() => setActiveTab('meeting')}
-            className={`relative z-10 flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors duration-300 ${
-              activeTab === 'meeting' ? 'text-orange-400' : 'text-slate-400 hover:text-slate-200'
+            className={`relative z-10 flex items-center gap-1.5 rounded-control px-2.5 py-1.5 text-xs font-semibold transition-colors duration-300 sm:gap-2 sm:px-3 ${
+              activeTab === 'meeting' ? 'text-brand-soft' : 'text-muted hover:text-soft'
             }`}
           >
-            <FileText className="w-3.5 h-3.5" />
+            <FileText className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Meeting & Intelligence</span>
             <span className="sm:hidden">Meeting</span>
           </button>
@@ -221,67 +221,58 @@ export default function CadenceStudioPage() {
             type="button"
             data-active={activeTab === 'workflow'}
             onClick={() => setActiveTab('workflow')}
-            className={`relative z-10 flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors duration-300 ${
-              activeTab === 'workflow' ? 'text-orange-400' : 'text-slate-400 hover:text-slate-200'
+            className={`relative z-10 flex items-center gap-1.5 rounded-control px-2.5 py-1.5 text-xs font-semibold transition-colors duration-300 sm:gap-2 sm:px-3 ${
+              activeTab === 'workflow' ? 'text-brand-soft' : 'text-muted hover:text-soft'
             }`}
           >
-            <WorkflowIcon className="w-3.5 h-3.5" />
+            <WorkflowIcon className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Agentic Canvas</span>
             <span className="sm:hidden">Workflow</span>
           </button>
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <button
-            type="button"
+          <Button
+            variant="secondary"
             onClick={() => setIsDropzoneOpen(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white transition-colors border border-slate-700/60"
             title="Upload a local audio file"
           >
-            <Upload className="w-3.5 h-3.5 text-orange-400" />
+            <Upload className="h-3.5 w-3.5 text-brand-soft" />
             <span className="hidden sm:inline">Upload Audio</span>
-          </button>
+          </Button>
 
           <a
             href="https://github.com/xdnzz/cadence-studio"
             target="_blank"
             rel="noreferrer"
-            className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors"
+            className="flex items-center gap-1.5 text-xs text-muted transition-colors hover:text-ink-strong"
           >
-            <GitHubMark className="w-4 h-4" />
+            <GitHubMark className="h-4 w-4" />
             <span className="hidden md:inline">GitHub</span>
           </a>
         </div>
       </header>
 
       {activeTab === 'meeting' && (
-        <div className="flex lg:hidden items-center justify-center p-2 bg-slate-900/60 border-b border-slate-800/80">
-          <div className="flex items-center gap-1 bg-slate-950 p-0.5 rounded-lg border border-slate-800">
-            <button
-              type="button"
+        <div className="flex items-center justify-center border-b border-line/80 bg-surface/60 p-2 lg:hidden">
+          <div className="flex items-center gap-1 rounded-control border border-line bg-canvas p-0.5">
+            <Button
+              variant={mobileSubTab === 'transcript' ? 'primary' : 'ghost'}
               onClick={() => setMobileSubTab('transcript')}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-                mobileSubTab === 'transcript'
-                  ? 'bg-orange-500 text-white'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
+              className="rounded-md px-3 py-1"
             >
-              <AlignLeft className="w-3 h-3" />
+              <AlignLeft className="h-3 w-3" />
               <span>Transcript</span>
-            </button>
+            </Button>
 
-            <button
-              type="button"
+            <Button
+              variant={mobileSubTab === 'intelligence' ? 'primary' : 'ghost'}
               onClick={() => setMobileSubTab('intelligence')}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-                mobileSubTab === 'intelligence'
-                  ? 'bg-orange-500 text-white'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
+              className="rounded-md px-3 py-1"
             >
-              <Sparkles className="w-3 h-3" />
+              <Sparkles className="h-3 w-3" />
               <span>Intelligence</span>
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -317,7 +308,7 @@ export default function CadenceStudioPage() {
         </div>
       </main>
 
-      <footer className="p-3 sm:p-4 bg-slate-950 border-t border-slate-800 space-y-2.5 sm:space-y-3 z-20">
+      <footer className="z-20 space-y-2.5 border-t border-line bg-canvas p-3 sm:space-y-3 sm:p-4">
         <WaveformCanvas
           peaks={activePeaks}
           currentTime={currentTime}

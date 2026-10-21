@@ -13,6 +13,8 @@ import {
   Workflow as WorkflowIcon,
 } from 'lucide-react';
 import { useWorkflowStore } from '@/stores/useWorkflowStore';
+import { Button } from '@/components/ui/button';
+import { Panel, PanelHeader, PanelTitle } from '@/components/ui/panel';
 import { WorkflowNode, WorkflowNodeType } from '@/types/workflow';
 
 const NODE_WIDTH = 220;
@@ -47,34 +49,28 @@ export const WorkflowCanvas: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-2xl">
-      <div className="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-900/80 backdrop-blur z-10">
-        <div className="flex items-center gap-2">
-          <WorkflowIcon className="w-4 h-4 text-orange-400" />
-          <h2 className="text-sm font-semibold text-slate-100">Post-Meeting Agentic Studio</h2>
-        </div>
+    <Panel>
+      <PanelHeader>
+        <PanelTitle icon={<WorkflowIcon className="h-4 w-4 text-brand-soft" />}>
+          Post-Meeting Agentic Studio
+        </PanelTitle>
 
-        <button
-          type="button"
-          onClick={() => executeWorkflow()}
-          disabled={isExecuting}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-orange-500 hover:bg-orange-600 disabled:bg-slate-800 text-white shadow-md transition-all active:scale-95"
-        >
+        <Button onClick={() => executeWorkflow()} disabled={isExecuting}>
           {isExecuting ? (
             <>
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
               <span>Executing Pipeline...</span>
             </>
           ) : (
             <>
-              <Play className="w-3.5 h-3.5 fill-current" />
+              <Play className="h-3.5 w-3.5 fill-current" />
               <span>Run Automated Workflow</span>
             </>
           )}
-        </button>
-      </div>
+        </Button>
+      </PanelHeader>
 
-      <div className="relative min-h-0 flex-1 overflow-auto bg-slate-950 select-none">
+      <div className="relative min-h-0 flex-1 select-none overflow-auto bg-canvas">
         <div
           className="relative m-8"
           style={{
@@ -85,8 +81,8 @@ export const WorkflowCanvas: React.FC = () => {
         <svg className="absolute inset-0 h-full w-full overflow-visible pointer-events-none">
           <defs>
             <linearGradient id="workflow-edge-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#f97316" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#fdba74" stopOpacity="0.4" />
+              <stop offset="0%" stopColor="var(--color-brand)" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="var(--color-brand-glow)" stopOpacity="0.4" />
             </linearGradient>
           </defs>
 
@@ -126,27 +122,25 @@ export const WorkflowCanvas: React.FC = () => {
                   top: `${node.position.y}px`,
                   width: '220px',
                 }}
-                className={`p-3.5 rounded-xl border bg-slate-900 cursor-pointer transition-all shadow-lg ${
+                className={`cursor-pointer rounded-card border bg-surface p-3.5 shadow-lg transition-all ${
                   isSelected
-                    ? 'border-orange-500 ring-1 ring-orange-500/50'
-                    : 'border-slate-800 hover:border-slate-700'
+                    ? 'border-brand ring-1 ring-brand/50'
+                    : 'border-line hover:border-line-strong'
                 }`}
               >
-                <div className="flex items-center justify-between mb-1.5">
+                <div className="mb-1.5 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="p-1 rounded-md bg-slate-800 text-orange-400">
-                      <Icon className="w-3.5 h-3.5" />
+                    <div className="rounded-md bg-raised p-1 text-brand-soft">
+                      <Icon className="h-3.5 w-3.5" />
                     </div>
-                    <span className="text-xs font-semibold text-slate-200">
-                      {node.data.label}
-                    </span>
+                    <span className="text-xs font-semibold text-soft">{node.data.label}</span>
                   </div>
 
-                  {isRunning && <Loader2 className="w-3.5 h-3.5 text-orange-400 animate-spin" />}
-                  {isSuccess && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
+                  {isRunning && <Loader2 className="h-3.5 w-3.5 animate-spin text-brand-soft" />}
+                  {isSuccess && <CheckCircle2 className="h-3.5 w-3.5 text-success" />}
                 </div>
 
-                <p className="text-[11px] text-slate-400 leading-tight">
+                <p className="text-[11px] leading-tight text-muted">
                   {node.data.description}
                 </p>
               </div>
@@ -154,6 +148,6 @@ export const WorkflowCanvas: React.FC = () => {
           })}
         </div>
       </div>
-    </div>
+    </Panel>
   );
 };

@@ -30,7 +30,7 @@ Meeting intelligence interfaces often suffer from UI lag caused by tying high-fr
 * **Framework:** Next.js 16 (React 19, App Router)
 * **Language:** TypeScript (Strict mode enabled)
 * **State Management:** Zustand 5 (Partitioned slices)
-* **Styling & Design System:** Tailwind CSS v4, Radix UI Primitives, Lucide Icons
+* **Styling & Design System:** Tailwind CSS v4 tokens (color, type, radius), shared UI primitives, Lucide Icons
 * **Audio & Visualization:** Web Audio API, Canvas API
 * **AI & Streaming:** Vercel AI SDK
 * **Testing:** Vitest, React Testing Library, JSDOM
@@ -44,6 +44,7 @@ Meeting intelligence interfaces often suffer from UI lag caused by tying high-fr
 src/
 ├── app/                  # Next.js App Router root layout and views
 ├── components/
+│   ├── ui/               # Design-system primitives: button, panel, field, badge
 │   ├── audio/            # Waveform Canvas, player controls, upload, timeline scrubbing
 │   ├── transcript/       # Interactive transcript, search filtering, word highlights
 │   ├── intelligence/     # Executive summary, takeaways, action items

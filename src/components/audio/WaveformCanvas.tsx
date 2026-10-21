@@ -3,6 +3,11 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { calculateTimeFromPosition, formatTime } from '@/lib/audioMath';
 
+function cssColor(variable: string, fallback: string) {
+  if (typeof window === 'undefined') return fallback;
+  return getComputedStyle(document.documentElement).getPropertyValue(variable).trim() || fallback;
+}
+
 interface WaveformCanvasProps {
   peaks: number[];
   currentTime: number;
@@ -25,9 +30,9 @@ export const WaveformCanvas: React.FC<WaveformCanvasProps> = ({
   height = 72,
   barWidth = 3,
   barGap = 2,
-  playedColor = '#f97316',
-  unplayedColor = '#475569',
-  cursorColor = '#ffffff',
+  playedColor,
+  unplayedColor,
+  cursorColor,
   className = '',
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -68,14 +73,16 @@ export const WaveformCanvas: React.FC<WaveformCanvasProps> = ({
       const x = i * step;
       const y = halfHeight - barHeight / 2;
 
-      ctx.fillStyle = x < currentProgressX ? playedColor : unplayedColor;
+      ctx.fillStyle = x < currentProgressX
+        ? playedColor || cssColor('--color-brand', '#f97316')
+        : unplayedColor || cssColor('--color-waveform', '#475569');
 
       ctx.beginPath();
       ctx.roundRect(x, y, barWidth, barHeight, 2);
       ctx.fill();
     }
 
-    ctx.fillStyle = cursorColor;
+    ctx.fillStyle = cursorColor || cssColor('--color-ink-strong', '#ffffff');
     ctx.fillRect(Math.max(0, currentProgressX - 1), 0, 2, height);
   }, [canvasWidth, height, peaks, currentTime, duration, barWidth, barGap, playedColor, unplayedColor, cursorColor]);
 
@@ -171,7 +178,7 @@ export const WaveformCanvas: React.FC<WaveformCanvasProps> = ({
 
       {hoverPosition && (
         <div
-          className="absolute pointer-events-none -top-8 -translate-x-1/2 px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-xs font-mono text-slate-200 shadow-lg"
+          className="pointer-events-none absolute -top-8 -translate-x-1/2 rounded border border-line-strong bg-surface px-2 py-0.5 font-mono text-xs text-soft shadow-lg"
           style={{ left: `${hoverPosition.x}px` }}
         >
           {formatTime(hoverPosition.time)}

@@ -13,6 +13,7 @@ import { useAudioStore } from '@/stores/useAudioStore';
 import { useAudioEngine } from '@/hooks/useAudioEngine';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { formatTime } from '@/lib/audioMath';
+import { Button } from '@/components/ui/button';
 
 export const AudioPlayerControls: React.FC = () => {
   const { togglePlayPause, seek } = useAudioEngine();
@@ -46,61 +47,40 @@ export const AudioPlayerControls: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 p-3 sm:p-4 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 shadow-xl">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-line bg-surface p-3 text-ink shadow-xl sm:flex-nowrap sm:p-4">
       <div className="flex items-center gap-1 sm:gap-2">
-        <button
-          type="button"
-          onClick={() => seek(currentTime - 5)}
-          className="p-2 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors"
-          title="Rewind 5 seconds"
-        >
-          <RotateCcw className="w-4 h-4" />
-        </button>
+        <Button variant="ghost" size="icon" onClick={() => seek(currentTime - 5)} title="Rewind 5 seconds">
+          <RotateCcw className="h-4 w-4" />
+        </Button>
 
-        <button
-          type="button"
-          onClick={togglePlayPause}
-          className="p-2.5 sm:p-3 rounded-full bg-orange-500 hover:bg-orange-600 text-white shadow-lg transition-transform active:scale-95"
-          title="Play / Pause"
-        >
-          {isPlaying ? <Pause className="w-4 sm:w-5 h-4 sm:h-5 fill-current" /> : <Play className="w-4 sm:w-5 h-4 sm:h-5 fill-current ml-0.5" />}
-        </button>
+        <Button variant="primary" size="icon-lg" onClick={togglePlayPause} title="Play / Pause">
+          {isPlaying ? (
+            <Pause className="h-4 w-4 fill-current sm:h-5 sm:w-5" />
+          ) : (
+            <Play className="ml-0.5 h-4 w-4 fill-current sm:h-5 sm:w-5" />
+          )}
+        </Button>
 
-        <button
-          type="button"
-          onClick={() => seek(currentTime + 5)}
-          className="p-2 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors"
-          title="Forward 5 seconds"
-        >
-          <RotateCw className="w-4 h-4" />
-        </button>
+        <Button variant="ghost" size="icon" onClick={() => seek(currentTime + 5)} title="Forward 5 seconds">
+          <RotateCw className="h-4 w-4" />
+        </Button>
 
-        <div className="flex items-center text-xs font-mono text-slate-400 ml-1 sm:ml-2">
-          <span className="text-slate-200">{formatTime(currentTime)}</span>
+        <div className="ml-1 flex items-center font-mono text-xs text-muted sm:ml-2">
+          <span className="text-soft">{formatTime(currentTime)}</span>
           <span className="mx-1">/</span>
           <span>{formatTime(duration)}</span>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-4 ml-auto">
-        <button
-          type="button"
-          onClick={handleRateCycle}
-          className="px-2 sm:px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
-          title="Playback speed"
-        >
+      <div className="ml-auto flex items-center gap-2 sm:gap-4">
+        <Button variant="secondary" onClick={handleRateCycle} title="Playback speed">
           {playbackRate}x
-        </button>
+        </Button>
 
         <div className="flex items-center gap-1 sm:gap-2">
-          <button
-            type="button"
-            onClick={toggleMute}
-            className="p-1.5 rounded text-slate-400 hover:text-slate-200 transition-colors"
-            title="Mute (M)"
-          >
-            {isMuted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-          </button>
+          <Button variant="ghost" size="icon" onClick={toggleMute} className="p-1.5" title="Mute (M)">
+            {isMuted || volume === 0 ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+          </Button>
 
           <input
             type="range"
@@ -108,8 +88,8 @@ export const AudioPlayerControls: React.FC = () => {
             max={1}
             step={0.05}
             value={isMuted ? 0 : volume}
-            onChange={(e) => setVolume(parseFloat(e.target.value))}
-            className="w-14 sm:w-20 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-orange-500"
+            onChange={(event) => setVolume(parseFloat(event.target.value))}
+            className="h-1.5 w-14 cursor-pointer appearance-none rounded-control bg-line-strong accent-brand sm:w-20"
             title="Volume"
           />
         </div>
