@@ -2,13 +2,13 @@
 
 > High-performance meeting intelligence workspace featuring decoupled 60 FPS audio waveform scrubbing, bidirectional word-level transcript synchronization, and an agentic post-meeting automation canvas.
 
-[[https://github.com/xdnzz/cadence-studio/actions/workflows/ci.yml/badge.svg]](https://github.com/xdnzz/cadence-studio/actions/workflows/ci.yml)
-[[https://img.shields.io/badge/TypeScript-Strict-blue.svg]](https://www.typescriptlang.org/)
-[[https://img.shields.io/badge/Next.js-15_(App_Router]-black.svg)](https://nextjs.org/)
-[[https://img.shields.io/badge/React-19-61dafb.svg]](https://react.dev/)
-[[https://img.shields.io/badge/Vitest-Unit_Tested-729B1B.svg]](https://vitest.dev/)
+[![CI](https://github.com/xdnzz/cadence-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/xdnzz/cadence-studio/actions/workflows/ci.yml)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Strict-blue.svg)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16_%28App_Router%29-black.svg)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19-61dafb.svg)](https://react.dev/)
+[![Vitest](https://img.shields.io/badge/Vitest-Unit_Tested-729B1B.svg)](https://vitest.dev/)
 
-**Live Demo:** [cadence-studio.vercel.app](https://cadence-studio.vercel.app)
+**Live Demo:** [cadence-studio-two.vercel.app](https://cadence-studio-two.vercel.app)
 
 ---
 
@@ -27,7 +27,7 @@ Meeting intelligence interfaces often suffer from UI lag caused by tying high-fr
 
 ## Tech Stack
 
-* **Framework:** Next.js 15 (React 19, App Router)
+* **Framework:** Next.js 16 (React 19, App Router)
 * **Language:** TypeScript (Strict mode enabled)
 * **State Management:** Zustand 5 (Partitioned slices)
 * **Styling & Design System:** Tailwind CSS v4, Radix UI Primitives, Lucide Icons
@@ -44,13 +44,14 @@ Meeting intelligence interfaces often suffer from UI lag caused by tying high-fr
 src/
 ├── app/                  # Next.js App Router root layout and views
 ├── components/
-│   ├── audio/            # Waveform Canvas, player controls, timeline scrubbing
+│   ├── audio/            # Waveform Canvas, player controls, upload, timeline scrubbing
 │   ├── transcript/       # Interactive transcript, search filtering, word highlights
-│   ├── intelligence/     # Executive summary stream, takeaways, action items
-│   ├── workflow/         # Directed automation canvas and task nodes
-│   └── ui/               # Accessible UI primitives (Radix UI + Tailwind)
+│   ├── intelligence/     # Executive summary, takeaways, action items
+│   └── workflow/         # Directed automation canvas and task nodes
+├── fixtures/             # Sample meeting data
 ├── hooks/                # Audio engine, transcript sync, keyboard navigation
 ├── stores/               # Zustand state slices (Audio, Transcript, Intelligence, Workflow)
-├── types/                # Domain type contracts (Zero implicit any)
+├── types/                # Domain type contracts
 ├── lib/                  # Pure math utilities, audio decoders, formatters
-└── test/                 # Test setup and shared mocks
+└── test/                 # Test setup
+```
