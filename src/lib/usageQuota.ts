@@ -1,4 +1,5 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   DAILY_LIMIT_MESSAGE,
@@ -81,7 +82,9 @@ export function createUsageQuota(options: UsageQuotaOptions) {
   return { transcriptionsRemaining, reserveTranscription };
 }
 
-const quota = createUsageQuota({ directory: join(process.cwd(), '.data') });
+const quota = createUsageQuota({
+  directory: process.env.VERCEL ? join(tmpdir(), 'cadence-usage') : join(process.cwd(), '.data'),
+});
 
 export function transcriptionsRemaining() {
   return quota.transcriptionsRemaining();

@@ -12,7 +12,7 @@ import {
 } from '@/lib/usagePolicy';
 import { UsageLimitError, reserveTranscription } from '@/lib/usageQuota';
 
-export const maxDuration = 1800;
+export const maxDuration = 300;
 
 const REQUEST_TIMEOUT = 30 * 60 * 1000;
 

@@ -11,7 +11,7 @@ import {
   uploadTooLarge,
 } from '@/lib/usagePolicy';
 
-export const maxDuration = 1800;
+export const maxDuration = 300;
 
 function inputExtension(file: File) {
   const fromName = file.name.split('.').pop()?.toLowerCase() ?? '';

@@ -34,7 +34,7 @@ describe('beta usage policy', () => {
 
   it('allows five transcriptions per day and keeps them after a failure', async () => {
     const directory = await mkdtemp(join(tmpdir(), 'cadence-usage-'));
-    let clock = new Date('2026-10-28T15:00:00.000Z');
+    const clock = new Date('2026-10-28T15:00:00.000Z');
     const quota = createUsageQuota({
       directory,
       now: () => clock,

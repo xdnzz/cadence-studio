@@ -50,7 +50,6 @@ export default function CadenceStudioPage() {
       useTranscriptStore.getState().reset();
       useIntelligenceStore.getState().reset();
       clearMeeting();
-      setActivePeaks([]);
       return;
     }
 
