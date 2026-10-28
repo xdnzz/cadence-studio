@@ -45,7 +45,7 @@ describe('CadenceStudioPage integration', () => {
   it('should open audio dropzone modal when upload button is clicked', () => {
     render(<CadenceStudioPage />);
 
-    const uploadButton = screen.getByTitle('Upload an audio file or a video');
+    const uploadButton = screen.getByTitle('Upload an audio file');
     fireEvent.click(uploadButton);
 
     expect(screen.getByText('Upload Meeting Recording')).toBeInTheDocument();

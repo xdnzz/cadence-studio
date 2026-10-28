@@ -7,19 +7,20 @@ import { useTranscriptStore } from '@/stores/useTranscriptStore';
 import { useIntelligenceStore } from '@/stores/useIntelligenceStore';
 import { decodeAudioFile } from '@/lib/audioDecoder';
 import {
-  extractAudioFromVideo,
-  isAudioFile,
-  isVideoFile,
-  RecordingProcessError,
-  videoNeedsServerExtract,
-} from '@/lib/extractAudioFromVideo';
-import {
   AUDIO_TOO_LONG_MESSAGE,
   DAILY_LIMIT_MESSAGE,
   UPLOAD_TOO_LARGE_MESSAGE,
   audioTooLong,
   uploadTooLarge,
 } from '@/lib/usagePolicy';
+
+const AUDIO_EXTENSIONS = ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'];
+
+function isAudioFile(file: File) {
+  if (file.type.startsWith('audio/')) return true;
+  const match = /\.([a-z0-9]+)$/i.exec(file.name);
+  return AUDIO_EXTENSIONS.includes(match?.[1]?.toLowerCase() ?? '');
+}
 
 interface AudioDropzoneProps {
   isOpen: boolean;
@@ -39,7 +40,6 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
   const [remaining, setRemaining] = useState<number | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const videoInputRef = useRef<HTMLInputElement | null>(null);
 
   const setActiveTrack = useAudioStore((state) => state.setActiveTrack);
   const setDuration = useAudioStore((state) => state.setDuration);
@@ -68,9 +68,8 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
   if (!isOpen) return null;
 
   const handleProcessFile = async (file: File) => {
-    const video = isVideoFile(file);
-    if (!video && !isAudioFile(file)) {
-      setErrorMessage('Please select an audio file or a video.');
+    if (!isAudioFile(file)) {
+      setErrorMessage('Please select an audio file.');
       return;
     }
 
@@ -88,19 +87,9 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
       setIsProcessing(true);
       setErrorMessage(null);
 
-      let audioFile = file;
-      if (video) {
-        setStatusMessage(
-          videoNeedsServerExtract(file.size)
-            ? 'Uploading the video and extracting the audio...'
-            : 'Extracting the audio from the video...',
-        );
-        audioFile = await extractAudioFromVideo(file);
-      }
-
       setStatusMessage('Decoding audio peaks in the browser...');
 
-      const { duration, waveform, audioUrl } = await decodeAudioFile(audioFile, 80);
+      const { duration, waveform, audioUrl } = await decodeAudioFile(file, 80);
 
       if (audioTooLong(duration)) {
         URL.revokeObjectURL(audioUrl);
@@ -124,7 +113,7 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
       setStatusMessage('Analyzing the meeting with Google Gemini...');
 
       const formData = new FormData();
-      formData.append('file', audioFile);
+      formData.append('file', file);
 
       const response = await fetch('/api/transcribe', {
         method: 'POST',
@@ -147,12 +136,8 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
         const errData = await response.json();
         setErrorMessage(errData.error || 'Could not process the audio with Gemini.');
       }
-    } catch (error) {
-      setErrorMessage(
-        error instanceof RecordingProcessError
-          ? error.message
-          : 'Failed to process the recording.',
-      );
+    } catch {
+      setErrorMessage('Failed to process the recording.');
     } finally {
       setIsProcessing(false);
       setStatusMessage(null);
@@ -211,15 +196,6 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
           onChange={handleFileInputChange}
           className="hidden"
         />
-        <input
-          ref={videoInputRef}
-          type="file"
-          accept="video/*,.mkv,.m4v,.avi"
-          onClick={(event) => event.stopPropagation()}
-          onChange={handleFileInputChange}
-          className="hidden"
-        />
-
         <div
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -263,18 +239,6 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
             </div>
           )}
         </div>
-
-        <button
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation();
-            if (!isProcessing) videoInputRef.current?.click();
-          }}
-          disabled={isProcessing}
-          className="w-full text-center text-xs font-medium text-orange-300 transition-colors hover:text-orange-200 disabled:opacity-50"
-        >
-          No audio file? Send the video instead.
-        </button>
 
         {errorMessage && (
           <div className="p-3 rounded-lg bg-red-950/40 border border-red-800/60 text-xs text-red-400">

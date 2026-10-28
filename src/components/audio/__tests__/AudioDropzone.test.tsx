@@ -26,11 +26,11 @@ describe('AudioDropzone', () => {
     expect(
       screen.getByText('Drag an audio file here or click to select')
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'No audio file? Send the video instead.' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'No audio file? Send the video instead.' })).toBeNull();
     expect(
       screen.getByText('Beta: up to 15 minutes, 100 MB, and 5 transcriptions a day.')
     ).toBeInTheDocument();
-    expect(document.querySelector('input[type="file"][accept="video/*,.mkv,.m4v,.avi"]')).not.toBeNull();
+    expect(document.querySelector('input[type="file"][accept="video/*,.mkv,.m4v,.avi"]')).toBeNull();
   });
 
   it('should trigger onClose when close button is clicked', () => {
