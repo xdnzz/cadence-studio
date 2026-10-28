@@ -49,7 +49,7 @@ export const MeetingIntelligencePanel: React.FC = () => {
                 )}
               </p>
             ) : (
-              <p className="text-faint">No summary generated yet.</p>
+              <p className="text-faint">Upload a recording to generate a summary.</p>
             )}
           </Card>
         </section>

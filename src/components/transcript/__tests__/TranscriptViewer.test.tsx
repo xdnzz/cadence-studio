@@ -31,6 +31,12 @@ describe('TranscriptViewer', () => {
     window.HTMLMediaElement.prototype.play = vi.fn().mockImplementation(() => Promise.resolve());
   });
 
+  it('should ask for a recording when there is no transcript', () => {
+    render(<TranscriptViewer />);
+
+    expect(screen.getByText('Upload a recording to transcribe the meeting.')).toBeInTheDocument();
+  });
+
   it('should render speaker names and all words', () => {
     useTranscriptStore.getState().setSegments(mockSegments);
 

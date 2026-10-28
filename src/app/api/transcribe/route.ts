@@ -1,8 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { FileState, GoogleAIFileManager } from '@google/generative-ai/server';
+import { Agent, setGlobalDispatcher } from 'undici';
+import { ProbeDurationError, probeBufferDuration } from '@/lib/probeDuration';
 import { joinBrokenSegments } from '@/lib/transcriptSegments';
+import {
+  AUDIO_TOO_LONG_MESSAGE,
+  UPLOAD_TOO_LARGE_MESSAGE,
+  audioTooLong,
+  uploadTooLarge,
+} from '@/lib/usagePolicy';
+import { UsageLimitError, reserveTranscription } from '@/lib/usageQuota';
+
+export const maxDuration = 1800;
+
+const REQUEST_TIMEOUT = 30 * 60 * 1000;
+
+setGlobalDispatcher(
+  new Agent({
+    headersTimeout: REQUEST_TIMEOUT,
+    bodyTimeout: REQUEST_TIMEOUT,
+    connectTimeout: 60 * 1000,
+  }),
+);
 
 const MODEL = 'gemini-3.8-flash';
+const INLINE_AUDIO_LIMIT = 15 * 1024 * 1024;
 
 function audioMimeType(file: File) {
   const type = file.type.toLowerCase();
@@ -18,19 +41,60 @@ function audioMimeType(file: File) {
 
 function safeErrorMessage(error: unknown) {
   const raw = error instanceof Error ? error.message : 'Unknown Gemini error';
-  return raw.replace(/key=[^&\s"']+/gi, 'key=redacted').slice(0, 400);
+  const cleaned = raw.replace(/key=[^&\s"']+/gi, 'key=redacted');
+  if (cleaned.includes('fetch failed')) {
+    return 'Gemini took too long to answer. Send the recording again and leave this window open.';
+  }
+  return cleaned.slice(0, 400);
+}
+
+async function audioPart(apiKey: string, bytes: Buffer, mimeType: string) {
+  if (bytes.byteLength <= INLINE_AUDIO_LIMIT) {
+    return {
+      inlineData: {
+        mimeType,
+        data: bytes.toString('base64'),
+      },
+    };
+  }
+
+  const fileManager = new GoogleAIFileManager(apiKey, { timeout: REQUEST_TIMEOUT });
+  let uploaded = (await fileManager.uploadFile(bytes, {
+    mimeType,
+    displayName: 'meeting-audio',
+  })).file;
+
+  for (let attempt = 0; attempt < 90 && uploaded.state === FileState.PROCESSING; attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    uploaded = await fileManager.getFile(uploaded.name);
+  }
+
+  if (uploaded.state !== FileState.ACTIVE) {
+    throw new Error('Gemini could not process the audio file.');
+  }
+
+  return {
+    fileData: {
+      mimeType: uploaded.mimeType,
+      fileUri: uploaded.uri,
+    },
+  };
 }
 
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
-    const file = formData.get('file') as File | null;
+    const file = formData.get('file');
 
-    if (!file) {
+    if (!(file instanceof File)) {
       return NextResponse.json(
         { error: 'No audio file was sent.' },
         { status: 400 }
       );
+    }
+
+    if (uploadTooLarge(file.size)) {
+      return NextResponse.json({ error: UPLOAD_TOO_LARGE_MESSAGE }, { status: 413 });
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
@@ -42,16 +106,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const arrayBuffer = await file.arrayBuffer();
-    const base64Audio = Buffer.from(arrayBuffer).toString('base64');
+    const audio = Buffer.from(await file.arrayBuffer());
+    const seconds = await probeBufferDuration(audio, file.name);
+
+    if (audioTooLong(seconds)) {
+      return NextResponse.json({ error: AUDIO_TOO_LONG_MESSAGE }, { status: 413 });
+    }
+
+    await reserveTranscription();
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: MODEL,
-      generationConfig: {
-        responseMimeType: 'application/json',
+    const model = genAI.getGenerativeModel(
+      {
+        model: MODEL,
+        generationConfig: {
+          responseMimeType: 'application/json',
+        },
       },
-    });
+      { timeout: REQUEST_TIMEOUT },
+    );
 
     const prompt = `
 Analyze this audio recording.
@@ -111,12 +184,7 @@ Return strict JSON matching this exact structure:
 
     const result = await model.generateContent([
       prompt,
-      {
-        inlineData: {
-          mimeType: audioMimeType(file),
-          data: base64Audio,
-        },
-      },
+      await audioPart(apiKey, audio, audioMimeType(file)),
     ]);
 
     const responseText = result.response.text();
@@ -128,6 +196,13 @@ Return strict JSON matching this exact structure:
 
     return NextResponse.json(parsedData);
   } catch (error) {
+    if (error instanceof UsageLimitError || error instanceof ProbeDurationError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error instanceof UsageLimitError ? 429 : 400 },
+      );
+    }
+
     const message = safeErrorMessage(error);
     console.error('Gemini transcription failed:', message);
 

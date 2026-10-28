@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { clearMeeting, loadMeeting, saveMeeting } from '../localMeetingStore';
+import { clearMeeting, isBundledSampleMeeting, loadMeeting, saveMeeting } from '../localMeetingStore';
 import { MeetingIntelligence } from '@/types/intelligence';
 
 const meeting: MeetingIntelligence = {
@@ -28,6 +28,17 @@ describe('localMeetingStore', () => {
     saveMeeting(meeting);
 
     expect(loadMeeting()).toEqual(meeting);
+  });
+
+  it('should recognize the bundled sample meeting', () => {
+    expect(
+      isBundledSampleMeeting({
+        ...meeting,
+        overview:
+          'Strategic engineering review focused on high-performance audio synchronization, state decoupling in Zustand, and post-meeting automation pipelines.',
+      }),
+    ).toBe(true);
+    expect(isBundledSampleMeeting(meeting)).toBe(false);
   });
 
   it('should ignore stored values that are not a meeting', () => {

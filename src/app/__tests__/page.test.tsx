@@ -38,28 +38,14 @@ describe('CadenceStudioPage integration', () => {
     render(<CadenceStudioPage />);
 
     expect(screen.getByText('Cadence Studio')).toBeInTheDocument();
-    expect(screen.getByText('Meeting & Intelligence')).toBeInTheDocument();
-    expect(screen.getByText('Agentic Canvas')).toBeInTheDocument();
-  });
-
-  it('should toggle between meeting tab and agentic canvas tab', () => {
-    render(<CadenceStudioPage />);
-
-    const canvasTabBtn = screen.getByRole('button', { name: /Agentic Canvas/i });
-    fireEvent.click(canvasTabBtn);
-
-    expect(screen.getByText('Post-Meeting Agentic Studio')).toBeInTheDocument();
-
-    const meetingTabBtn = screen.getByRole('button', { name: /Meeting & Intelligence/i });
-    fireEvent.click(meetingTabBtn);
-
     expect(screen.getByText('Meeting Intelligence')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Agentic Canvas/i })).toBeNull();
   });
 
   it('should open audio dropzone modal when upload button is clicked', () => {
     render(<CadenceStudioPage />);
 
-    const uploadButton = screen.getByTitle('Upload a local audio file');
+    const uploadButton = screen.getByTitle('Upload an audio file or a video');
     fireEvent.click(uploadButton);
 
     expect(screen.getByText('Upload Meeting Recording')).toBeInTheDocument();

@@ -18,6 +18,7 @@ export const TranscriptViewer: React.FC = () => {
   const { filteredSegments, activeSegmentId, activeWordId } = useTranscriptSync();
   const { seek, play } = useAudioEngine();
 
+  const segments = useTranscriptStore((state) => state.segments);
   const searchQuery = useTranscriptStore((state) => state.searchQuery);
   const setSearchQuery = useTranscriptStore((state) => state.setSearchQuery);
   const isAutoScrollEnabled = useTranscriptStore((state) => state.isAutoScrollEnabled);
@@ -80,7 +81,9 @@ export const TranscriptViewer: React.FC = () => {
       <div ref={containerRef} onWheel={handleWheel} className="flex-1 space-y-6 overflow-y-auto p-6">
         {filteredSegments.length === 0 ? (
           <div className="flex h-48 flex-col items-center justify-center text-sm text-faint">
-            No transcript segments match this search.
+            {segments.length === 0
+              ? 'Upload a recording to transcribe the meeting.'
+              : 'No transcript segments match this search.'}
           </div>
         ) : (
           filteredSegments.map((segment) => {

@@ -2,6 +2,13 @@ import { MeetingIntelligence } from '@/types/intelligence';
 
 const STORAGE_KEY = 'cadence-studio.meeting';
 
+const BUNDLED_SAMPLE_OVERVIEW =
+  'Strategic engineering review focused on high-performance audio synchronization, state decoupling in Zustand, and post-meeting automation pipelines.';
+
+export function isBundledSampleMeeting(meeting: MeetingIntelligence) {
+  return meeting.overview === BUNDLED_SAMPLE_OVERVIEW;
+}
+
 function canUseStorage() {
   return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
 }

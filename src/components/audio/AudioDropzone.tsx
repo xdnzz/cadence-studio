@@ -1,11 +1,25 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { UploadCloud, FileAudio, Loader2, X } from 'lucide-react';
 import { useAudioStore } from '@/stores/useAudioStore';
 import { useTranscriptStore } from '@/stores/useTranscriptStore';
 import { useIntelligenceStore } from '@/stores/useIntelligenceStore';
 import { decodeAudioFile } from '@/lib/audioDecoder';
+import {
+  extractAudioFromVideo,
+  isAudioFile,
+  isVideoFile,
+  RecordingProcessError,
+  videoNeedsServerExtract,
+} from '@/lib/extractAudioFromVideo';
+import {
+  AUDIO_TOO_LONG_MESSAGE,
+  DAILY_LIMIT_MESSAGE,
+  UPLOAD_TOO_LARGE_MESSAGE,
+  audioTooLong,
+  uploadTooLarge,
+} from '@/lib/usagePolicy';
 
 interface AudioDropzoneProps {
   isOpen: boolean;
@@ -22,28 +36,77 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [remaining, setRemaining] = useState<number | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const videoInputRef = useRef<HTMLInputElement | null>(null);
 
   const setActiveTrack = useAudioStore((state) => state.setActiveTrack);
   const setDuration = useAudioStore((state) => state.setDuration);
   const setSegments = useTranscriptStore((state) => state.setSegments);
   const setIntelligence = useIntelligenceStore((state) => state.setIntelligence);
 
+  const refreshRemaining = useCallback(() => {
+    void fetch('/api/usage')
+      .then((response) => response.json())
+      .then((payload: unknown) => {
+        if (typeof payload !== 'object' || payload === null || !('remaining' in payload)) return;
+        if (typeof payload.remaining !== 'number' || !Number.isFinite(payload.remaining)) return;
+        setRemaining(payload.remaining);
+        if (payload.remaining === 0) {
+          setErrorMessage((current) => current ?? DAILY_LIMIT_MESSAGE);
+        }
+      })
+      .catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    refreshRemaining();
+  }, [isOpen, refreshRemaining]);
+
   if (!isOpen) return null;
 
   const handleProcessFile = async (file: File) => {
-    if (!file.type.startsWith('audio/')) {
-      setErrorMessage('Please select a valid audio file (.mp3, .wav, .m4a).');
+    const video = isVideoFile(file);
+    if (!video && !isAudioFile(file)) {
+      setErrorMessage('Please select an audio file or a video.');
+      return;
+    }
+
+    if (uploadTooLarge(file.size)) {
+      setErrorMessage(UPLOAD_TOO_LARGE_MESSAGE);
+      return;
+    }
+
+    if (remaining === 0) {
+      setErrorMessage(DAILY_LIMIT_MESSAGE);
       return;
     }
 
     try {
       setIsProcessing(true);
       setErrorMessage(null);
+
+      let audioFile = file;
+      if (video) {
+        setStatusMessage(
+          videoNeedsServerExtract(file.size)
+            ? 'Uploading the video and extracting the audio...'
+            : 'Extracting the audio from the video...',
+        );
+        audioFile = await extractAudioFromVideo(file);
+      }
+
       setStatusMessage('Decoding audio peaks in the browser...');
 
-      const { duration, waveform, audioUrl } = await decodeAudioFile(file, 80);
+      const { duration, waveform, audioUrl } = await decodeAudioFile(audioFile, 80);
+
+      if (audioTooLong(duration)) {
+        URL.revokeObjectURL(audioUrl);
+        setErrorMessage(AUDIO_TOO_LONG_MESSAGE);
+        return;
+      }
 
       setActiveTrack({
         id: `local-${Date.now()}`,
@@ -61,7 +124,7 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
       setStatusMessage('Analyzing the meeting with Google Gemini...');
 
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', audioFile);
 
       const response = await fetch('/api/transcribe', {
         method: 'POST',
@@ -84,11 +147,16 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
         const errData = await response.json();
         setErrorMessage(errData.error || 'Could not process the audio with Gemini.');
       }
-    } catch {
-      setErrorMessage('Failed to process the audio file.');
+    } catch (error) {
+      setErrorMessage(
+        error instanceof RecordingProcessError
+          ? error.message
+          : 'Failed to process the recording.',
+      );
     } finally {
       setIsProcessing(false);
       setStatusMessage(null);
+      refreshRemaining();
     }
   };
 
@@ -127,6 +195,7 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
 
           <button
             type="button"
+            aria-label="Close"
             onClick={onClose}
             disabled={isProcessing}
             className="p-1 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors disabled:opacity-50"
@@ -134,6 +203,22 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
             <X className="w-4 h-4" />
           </button>
         </div>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="audio/*"
+          onChange={handleFileInputChange}
+          className="hidden"
+        />
+        <input
+          ref={videoInputRef}
+          type="file"
+          accept="video/*,.mkv,.m4v,.avi"
+          onClick={(event) => event.stopPropagation()}
+          onChange={handleFileInputChange}
+          className="hidden"
+        />
 
         <div
           onDragOver={handleDragOver}
@@ -146,14 +231,6 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
               : 'border-slate-800 hover:border-slate-700 bg-slate-950/50'
           }`}
         >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="audio/*"
-            onChange={handleFileInputChange}
-            className="hidden"
-          />
-
           {isProcessing ? (
             <div className="flex flex-col items-center gap-2">
               <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
@@ -175,9 +252,29 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
               <p className="text-[11px] text-slate-500">
                 Supports MP3, WAV, M4A, or AAC
               </p>
+              <p className="text-[11px] text-slate-500">
+                Beta: up to 15 minutes, 100 MB, and 5 transcriptions a day.
+              </p>
+              {remaining !== null && (
+                <p className="text-[11px] text-slate-400">
+                  {remaining} transcriptions left today.
+                </p>
+              )}
             </div>
           )}
         </div>
+
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            if (!isProcessing) videoInputRef.current?.click();
+          }}
+          disabled={isProcessing}
+          className="w-full text-center text-xs font-medium text-orange-300 transition-colors hover:text-orange-200 disabled:opacity-50"
+        >
+          No audio file? Send the video instead.
+        </button>
 
         {errorMessage && (
           <div className="p-3 rounded-lg bg-red-950/40 border border-red-800/60 text-xs text-red-400">

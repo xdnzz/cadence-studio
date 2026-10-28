@@ -49,7 +49,6 @@ src/
 │   ├── transcript/       # Interactive transcript, search filtering, word highlights
 │   ├── intelligence/     # Executive summary, takeaways, action items
 │   └── workflow/         # Directed automation canvas and task nodes
-├── fixtures/             # Sample meeting data
 ├── hooks/                # Audio engine, transcript sync, keyboard navigation
 ├── stores/               # Zustand state slices (Audio, Transcript, Intelligence, Workflow)
 ├── types/                # Domain type contracts
